@@ -1,0 +1,55 @@
+table dim_date
+	dataCategory: Time
+
+	column date_key
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: date_key
+		isKey
+
+	column date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		summarizeBy: none
+		sourceColumn: date
+
+	column year
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: year
+
+	column quarter
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: quarter
+
+	column month
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: month
+
+	column month_name
+		dataType: string
+		summarizeBy: none
+		sourceColumn: month_name
+		sortByColumn: month
+
+	column year_month
+		dataType: string
+		summarizeBy: none
+		sourceColumn: year_month
+
+	column is_partial_month
+		dataType: boolean
+		summarizeBy: none
+		sourceColumn: is_partial_month
+
+	partition dim_date = m
+		mode: import
+		source =
+				let
+				    Source = Parquet.Document ( File.Contents ( ExportFolder & "dim_date.parquet" ) )
+				in
+				    Source
+
+	annotation PBI_MarkedDateTable = true

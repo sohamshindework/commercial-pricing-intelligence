@@ -1,0 +1,11 @@
+rule_id,rule_order,action,name,rationale
+R01_sheet_overlap,1,remove,Sheet overlap,"The workbook has two sheets. Rows dated on or after the second sheet's first timestamp also appear in the first sheet (1-9 Dec 2010). The copy in the earlier sheet is dropped; the pipeline checks the two copies are identical first."
+R02_exact_duplicate,2,flag,Exact-looking repeated line,"Rows identical in all eight source fields are flagged for sensitivity analysis but retained. The source has no immutable line identifier, and high-multiplicity examples can represent legitimate repeated items; deletion is therefore not provable."
+R03_missing_key_field,3,remove,Missing key field,"Invoice, stock code, timestamp, quantity or price is blank. The row cannot be attributed."
+R04_non_product_code,4,remove,Non-product code,"Postage, carriage, fees, manual adjustments, discounts, samples, bad debt, gift vouchers and test codes (see sql/seeds/non_product_codes.csv). They are not product sales, so they are outside the product revenue definition."
+R05_zero_price,5,remove,Zero price,"Unit price is 0. In this data these are stock adjustments (damaged, missing, found) or free items. They carry no revenue but would distort units and prices."
+R06_negative_price,6,remove,Negative price,"Unit price below 0. Accounting adjustments, not sales."
+R07_nonpositive_qty_on_sale,7,remove,Non-positive quantity on a sales invoice,"Invoice is not a cancellation but quantity is 0 or negative. Stock movements, not sales."
+R08_nonnegative_qty_on_cancellation,8,remove,Non-negative quantity on a cancellation,"Invoice starts with 'C' but quantity is 0 or positive. Inconsistent record."
+F01_missing_customer,,flag,Missing customer ID,"Kept for revenue totals (customer_key = -1). Excluded from customer-level analysis (segments, cohorts, CLV)."
+F02_extreme_line,,flag,Extreme line,"Absolute quantity or absolute line value at or above the thresholds in config/settings.toml. Kept; analyses that are sensitive to outliers may exclude them and must say so."

@@ -1,0 +1,81 @@
+// Commercial & Pricing Intelligence — DAX measures
+// Built on the exported star schema (data/exports/powerbi/). Analytics that need
+// multi-period decomposition (price/volume/mix) or model output (CLV, cohorts)
+// are IMPORTED as pre-computed tables from Python and visualised directly — the
+// business logic is never re-implemented in DAX. These measures cover the live
+// star-schema KPIs. Values must match data/exports/powerbi/measures_reconciliation.csv.
+
+// ---- Core revenue -------------------------------------------------------
+Net Revenue = SUM ( fct_order_lines[line_amount] )
+
+Gross Revenue =
+    CALCULATE ( [Net Revenue], fct_order_lines[line_type] = "sale" )
+
+Cancellations =
+    CALCULATE ( [Net Revenue], fct_order_lines[line_type] = "cancellation" )
+
+Units Sold =
+    CALCULATE ( SUM ( fct_order_lines[quantity] ), fct_order_lines[line_type] = "sale" )
+
+// ---- Invoices & basket --------------------------------------------------
+Sale Invoices =
+    CALCULATE ( DISTINCTCOUNT ( fct_order_lines[invoice_no] ), fct_order_lines[line_type] = "sale" )
+
+Cancellation Invoices =
+    CALCULATE ( DISTINCTCOUNT ( fct_order_lines[invoice_no] ), fct_order_lines[line_type] = "cancellation" )
+
+All Invoices = DISTINCTCOUNT ( fct_order_lines[invoice_no] )
+
+Gross Sales AOV = DIVIDE ( [Gross Revenue], [Sale Invoices] )
+
+Avg Unit Price =
+    DIVIDE ( [Gross Revenue], [Units Sold] )
+
+// ---- Customers ----------------------------------------------------------
+Active Customers =
+    CALCULATE (
+        DISTINCTCOUNT ( fct_order_lines[customer_key] ),
+        fct_order_lines[customer_key] <> -1
+    )
+
+Guest Revenue =
+    CALCULATE ( [Net Revenue], fct_order_lines[customer_key] = -1 )
+
+Guest Revenue % = DIVIDE ( [Guest Revenue], [Net Revenue] )
+
+Customers With Repeat =
+    VAR OrdersPerCustomer =
+        ADDCOLUMNS (
+            FILTER ( VALUES ( fct_order_lines[customer_key] ), fct_order_lines[customer_key] <> -1 ),
+            "@orders", [Sale Invoices]
+        )
+    RETURN
+        COUNTROWS ( FILTER ( OrdersPerCustomer, [@orders] >= 2 ) )
+
+Repeat Rate = DIVIDE ( [Customers With Repeat], [Active Customers] )
+
+// ---- Time intelligence (needs the marked date table dim_date) ----------
+Net Revenue PY =
+    CALCULATE ( [Net Revenue], SAMEPERIODLASTYEAR ( dim_date[date] ) )
+
+Revenue YoY % =
+    DIVIDE ( [Net Revenue] - [Net Revenue PY], [Net Revenue PY] )
+
+Sale Invoices PY =
+    CALCULATE ( [Sale Invoices], SAMEPERIODLASTYEAR ( dim_date[date] ) )
+
+// ---- Analytics served from imported Python result tables ---------------
+// Revenue bridge (price/volume/mix/new/lost): computed in Python, imported as
+// `revenue_bridges`. Visualise [value_gbp] by [component] filtered on [lens].
+Bridge Value = SUM ( revenue_bridges[value_gbp] )
+
+// CLV: BG/NBD + Gamma-Gamma output imported as `clv_customers`.
+Avg Predicted CLV = AVERAGE ( clv_customers[expected_clv_horizon] )
+Total Predicted CLV = SUM ( clv_customers[expected_clv_horizon] )
+
+// Cohort retention: imported as `cohort_retention_rates` (long form).
+Avg Retention = AVERAGE ( cohort_retention_curve[avg_retention] )
+
+// Pricing opportunity (scenario ranges): imported as `opportunities`.
+Opportunity Low = SUM ( opportunities[impact_low_gbp] )
+Opportunity High = SUM ( opportunities[impact_high_gbp] )

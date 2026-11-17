@@ -1,0 +1,46 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+@layer components {
+  .input {
+    @apply rounded-md border border-border bg-surface px-3 py-2 text-[13px] text-ink transition;
+    height: 38px;
+  }
+  .input:hover {
+    @apply border-iris/50;
+  }
+  .input:focus-visible {
+    @apply border-iris;
+    outline: 2px solid theme("colors.iris.DEFAULT");
+    outline-offset: 1px;
+  }
+  .input:disabled {
+    @apply cursor-not-allowed bg-surface-alt text-muted opacity-70;
+  }
+}
+
+@layer base {
+  html {
+    font-family: theme("fontFamily.body");
+    color: theme("colors.body");
+    background: theme("colors.canvas");
+  }
+  body {
+    margin: 0;
+    min-width: 0;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 {
+    font-family: theme("fontFamily.heading");
+    color: theme("colors.ink");
+  }
+  /* Tabular numerals for aligned money / percentages. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+  :focus-visible {
+    outline: 2px solid theme("colors.iris.DEFAULT");
+    outline-offset: 2px;
+  }
+}

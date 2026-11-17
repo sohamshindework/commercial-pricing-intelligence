@@ -1,0 +1,18 @@
+stock_code,match_type,category,reason
+POST,exact,shipping,Postage charge - not a product sale
+DOT,exact,shipping,Dotcom postage charge - not a product sale
+C2,exact,shipping,Carriage charge - not a product sale
+C3,exact,shipping,Carriage charge - not a product sale
+M,exact,manual_adjustment,Manual price/credit adjustment - no product attached
+D,exact,discount,Discount line - not a product sale
+S,exact,samples,Samples write-off - not a product sale
+B,exact,bad_debt,Bad-debt adjustment (invoices starting 'A') - accounting entry
+ADJUST,exact,manual_adjustment,Manual adjustment entry
+ADJUST2,exact,manual_adjustment,Manual adjustment entry
+BANK CHARGES,exact,fee,Bank charges - fee not product revenue
+AMAZONFEE,exact,fee,Amazon marketplace fee - fee not product revenue
+CRUK,exact,fee,Charity (CRUK) commission - not product revenue
+TEST001,exact,test,Test product
+TEST002,exact,test,Test product
+GIFT,exact,gift_voucher,Gift voucher - stored value not product revenue
+GIFT_,prefix,gift_voucher,Gift voucher (gift_0001_xx codes) - stored value not product revenue

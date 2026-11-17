@@ -1,0 +1,28 @@
+model Model
+	culture: en-GB
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: en-GB
+
+/// Folder holding the exported tables (set to your local
+/// data/exports/powerbi/ path, e.g. "C:\\repo\\data\\exports\\powerbi\\").
+expression ExportFolder = "C:\\path\\to\\data\\exports\\powerbi\\" meta [IsParameterQuery = true, Type = "Text", IsParameterQueryRequired = true]
+
+	annotation PBI_QueryOrder = ["fct_order_lines","dim_date","dim_customer","dim_product","dim_country","revenue_bridges","clv_customers","cohort_retention_curve","opportunities"]
+
+// Relationships (star schema; single-direction, dim -> fact)
+relationship rel_fact_date
+	fromColumn: fct_order_lines.date_key
+	toColumn: dim_date.date_key
+
+relationship rel_fact_customer
+	fromColumn: fct_order_lines.customer_key
+	toColumn: dim_customer.customer_key
+
+relationship rel_fact_product
+	fromColumn: fct_order_lines.product_key
+	toColumn: dim_product.product_key
+
+relationship rel_fact_country
+	fromColumn: fct_order_lines.country_key
+	toColumn: dim_country.country_key

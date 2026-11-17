@@ -1,0 +1,110 @@
+table fct_order_lines
+
+	/// Net revenue in GBP (sales minus cancellations). Matches Python net_revenue.
+	measure 'Net Revenue' = SUM ( fct_order_lines[line_amount] )
+		formatString: "£"#,0
+
+	measure 'Gross Revenue' = CALCULATE ( [Net Revenue], fct_order_lines[line_type] = "sale" )
+		formatString: "£"#,0
+
+	measure Cancellations = CALCULATE ( [Net Revenue], fct_order_lines[line_type] = "cancellation" )
+		formatString: "£"#,0
+
+	measure 'Units Sold' = CALCULATE ( SUM ( fct_order_lines[quantity] ), fct_order_lines[line_type] = "sale" )
+		formatString: #,0
+
+	measure 'Sale Invoices' = CALCULATE ( DISTINCTCOUNT ( fct_order_lines[invoice_no] ), fct_order_lines[line_type] = "sale" )
+		formatString: #,0
+
+	measure 'Cancellation Invoices' = CALCULATE ( DISTINCTCOUNT ( fct_order_lines[invoice_no] ), fct_order_lines[line_type] = "cancellation" )
+		formatString: #,0
+
+	measure 'All Invoices' = DISTINCTCOUNT ( fct_order_lines[invoice_no] )
+		formatString: #,0
+
+	measure 'Gross Sales AOV' = DIVIDE ( [Gross Revenue], [Sale Invoices] )
+		formatString: "£"#,0.00
+
+	measure 'Active Customers' = CALCULATE ( DISTINCTCOUNT ( fct_order_lines[customer_key] ), fct_order_lines[customer_key] <> -1 )
+		formatString: #,0
+
+	measure 'Guest Revenue %' = DIVIDE ( CALCULATE ( [Net Revenue], fct_order_lines[customer_key] = -1 ), [Net Revenue] )
+		formatString: 0.0%
+
+	measure 'Net Revenue PY' = CALCULATE ( [Net Revenue], SAMEPERIODLASTYEAR ( dim_date[date] ) )
+		formatString: "£"#,0
+
+	measure 'Revenue YoY %' = DIVIDE ( [Net Revenue] - [Net Revenue PY], [Net Revenue PY] )
+		formatString: 0.0%
+
+	column line_id
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: line_id
+		isKey
+
+	column invoice_no
+		dataType: string
+		summarizeBy: none
+		sourceColumn: invoice_no
+
+	column line_type
+		dataType: string
+		summarizeBy: none
+		sourceColumn: line_type
+
+	column invoice_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		summarizeBy: none
+		sourceColumn: invoice_date
+
+	column date_key
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: date_key
+
+	column customer_key
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: customer_key
+
+	column product_key
+		dataType: string
+		summarizeBy: none
+		sourceColumn: product_key
+
+	column country_key
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: country_key
+
+	column quantity
+		dataType: int64
+		summarizeBy: sum
+		sourceColumn: quantity
+
+	column unit_price
+		dataType: decimal
+		formatString: "£"#,0.000
+		summarizeBy: none
+		sourceColumn: unit_price
+
+	column line_amount
+		dataType: decimal
+		formatString: "£"#,0.00
+		summarizeBy: sum
+
+	column is_duplicate_looking
+		dataType: boolean
+		summarizeBy: none
+		sourceColumn: is_duplicate_looking
+		sourceColumn: line_amount
+
+	partition fct_order_lines = m
+		mode: import
+		source =
+				let
+				    Source = Parquet.Document ( File.Contents ( ExportFolder & "fct_order_lines.parquet" ) )
+				in
+				    Source

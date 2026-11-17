@@ -1,0 +1,44 @@
+country_name,iso_alpha2,region,market
+United Kingdom,GB,United Kingdom,UK
+EIRE,IE,EU,International
+Germany,DE,EU,International
+France,FR,EU,International
+Netherlands,NL,EU,International
+Spain,ES,EU,International
+Belgium,BE,EU,International
+Portugal,PT,EU,International
+Italy,IT,EU,International
+Sweden,SE,EU,International
+Cyprus,CY,EU,International
+Finland,FI,EU,International
+Austria,AT,EU,International
+Denmark,DK,EU,International
+Greece,GR,EU,International
+Poland,PL,EU,International
+Malta,MT,EU,International
+Lithuania,LT,EU,International
+Czech Republic,CZ,EU,International
+European Community,,EU,International
+Switzerland,CH,Other Europe,International
+Norway,NO,Other Europe,International
+Iceland,IS,Other Europe,International
+Channel Islands,,Other Europe,International
+Australia,AU,Rest of World,International
+Japan,JP,Rest of World,International
+USA,US,Rest of World,International
+United Arab Emirates,AE,Rest of World,International
+Israel,IL,Rest of World,International
+Hong Kong,HK,Rest of World,International
+Singapore,SG,Rest of World,International
+Canada,CA,Rest of World,International
+RSA,ZA,Rest of World,International
+Bahrain,BH,Rest of World,International
+Brazil,BR,Rest of World,International
+Thailand,TH,Rest of World,International
+Korea,KR,Rest of World,International
+Lebanon,LB,Rest of World,International
+West Indies,,Rest of World,International
+Bermuda,BM,Rest of World,International
+Nigeria,NG,Rest of World,International
+Saudi Arabia,SA,Rest of World,International
+Unspecified,,Unspecified,Unknown

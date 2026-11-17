@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+build/
+dist/
+
+# Node / frontend (web/)
+node_modules/
+web/dist/
+web/coverage/
+web/.vite/
+
+# Secrets
+.env
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
+
+# Data: raw downloads and generated warehouses are never committed.
+# Only the small sample fixture in tests/fixtures/ is versioned.
+data/raw/
+data/warehouse/
+data/exports/
+*.duckdb
+*.duckdb.wal

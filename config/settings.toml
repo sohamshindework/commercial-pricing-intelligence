@@ -1,0 +1,146 @@
+# Versioned pipeline configuration. Paths are relative to the repository root.
+
+[dataset]
+name = "UCI Online Retail II"
+url = "https://archive.ics.uci.edu/static/public/502/online+retail+ii.zip"
+landing_page = "https://archive.ics.uci.edu/dataset/502/online+retail+ii"
+licence = "CC BY 4.0"
+# SHA-256 of the files as downloaded on 2026-11-14. If UCI re-packages the
+# archive the zip hash can change; the workbook hash is the stronger check.
+zip_sha256 = "572e36277c2390fbfde10664750731e0a86f55e33470d91919085f0408e67bfb"
+xlsx_name = "online_retail_II.xlsx"
+xlsx_sha256 = "bcbe73b35f5b7babf197fb0cb983a11f5d9ff929078d4aa53d171b1f2df2e980"
+currency = "GBP"
+
+[paths]
+raw_dir = "data/raw"
+landing_parquet = "data/raw/online_retail_ii_landing.parquet"
+warehouse = "data/warehouse/commercial.duckdb"
+quality_report = "docs/data_quality_report.md"
+fixture_parquet = "tests/fixtures/online_retail_ii_sample.parquet"
+
+[cleaning]
+# Lines at or above these thresholds are FLAGGED (is_extreme_line), never removed.
+extreme_quantity = 5000
+extreme_line_value_gbp = 5000
+
+[fixture]
+# Share of invoices kept in the CI sample (sampled by invoice, so cancellations,
+# duplicates and the sheet overlap stay intact).
+invoice_share = 0.05
+
+[revenue]
+# Primary year-on-year bridge. Dec 2009 is an isolated month (no prior-year
+# comparator) and Dec 2011 is partial (data ends 2011-12-09), so the comparable
+# window is the 11 complete months January-November in both years.
+yoy_label = "Jan-Nov 2011 vs Jan-Nov 2010"
+yoy_base_start = 2010-01-01
+yoy_base_end = 2010-11-30
+yoy_current_start = 2011-01-01
+yoy_current_end = 2011-11-30
+
+# Example month-on-month bridge: two consecutive complete months.
+mom_label = "Nov 2011 vs Oct 2011"
+mom_base_start = 2011-10-01
+mom_base_end = 2011-10-31
+mom_current_start = 2011-11-01
+mom_current_end = 2011-11-30
+
+[revenue.paths]
+export_dir = "data/exports/revenue"
+findings_report = "docs/m2_revenue_decomposition.md"
+
+[customers]
+# Reproducibility
+random_seed = 42
+# k-means on scaled RFM: candidate cluster counts to score by silhouette.
+kmeans_k_candidates = [3, 4, 5, 6]
+# Segment-stability windows (RFM + k-means fit independently on each, then
+# compared by Adjusted Rand Index on customers active in both).
+stability_split_date = 2010-12-09
+
+[customers.clv]
+# Time-based holdout (no leakage): calibrate on the first ~18 months, test on
+# the last ~6. observation_end is the last transaction date in the data.
+calibration_end = 2011-05-31
+# Light L2 penalty. BG/NBD's conditional expectation calls a hypergeometric
+# function that scipy returns NaN for under some fitted-parameter regimes
+# (zero-repeat customers). A light penalty keeps the fit in a numerically stable
+# regime on this data; a finiteness guard in clv.py backstops any residual NaN.
+penalizer_coef = 0.001
+# CLV projection horizon (days) for the forward-looking value estimate.
+horizon_days = 180
+# Robustness check: re-run the holdout at several calibration splits so the
+# model-vs-baseline verdict does not hinge on one arbitrary date.
+sensitivity_splits = [2011-03-31, 2011-05-31, 2011-07-31]
+
+[customers.paths]
+export_dir = "data/exports/customers"
+assets_dir = "assets/customers"
+findings_report = "docs/m3_customer_intelligence.md"
+
+[products]
+random_seed = 42
+gold_path = "data/labels/product_families_gold.csv"
+taxonomy_path = "data/labels/taxonomy.csv"
+export_dir = "data/exports/products"
+assets_dir = "assets/products"
+findings_report = "docs/m4_product_classification.md"
+# Retained only for backwards-compatible configuration parsing. Stage B1 withdrew
+# the label-derived LLM comparison; the independent baseline is always selected.
+llm_preference_margin_f1 = 0.03
+
+[products.llm]
+provider = "disabled"
+# No LLM result is used in evaluation or catalogue labelling. The former cassette
+# is quarantined because it was label-derived; scripts/record_llm_cassette.py is
+# intentionally disabled.
+model = "disabled"
+mode = "disabled"
+predictions_path = "tests/fixtures/llm_product_predictions.csv"
+# List prices (USD per 1M tokens) for the ESTIMATED cost (tokens are counted
+# from the real prompt the client builds; cost is an estimate, not a billed amount).
+usd_per_1m_input_tokens = 0.80
+usd_per_1m_output_tokens = 4.00
+est_output_tokens = 12
+
+[pricing]
+random_seed = 42
+product_families_path = "data/exports/products/product_families.parquet"
+export_dir = "data/exports/pricing"
+assets_dir = "assets/pricing"
+findings_report = "docs/m5_pricing_opportunities.md"
+workbook_path = "excel/experiment_sizing.xlsx"
+# A product is a price-dispersion candidate if it has at least this many sale
+# lines and sells at more than one unit price. Extreme-flagged lines (M1 F02)
+# are excluded from opportunity sizing.
+min_lines_for_dispersion = 30
+# Scenario capture rates for revenue-opportunity RANGES (share of the measured
+# price-realisation gap assumed to be recoverable). These are assumptions, not
+# predictions; the range is reported, never a point estimate.
+capture_low = 0.20
+capture_high = 0.50
+# Margin is shown only as a labelled scenario (no cost data exists).
+assumed_cost_ratio = 0.55
+
+[pricing.experiment]
+alpha = 0.05
+power = 0.80
+# Minimum detectable effect on the primary metric (relative), for the headline
+# power calculation. The workbook lets the user vary this.
+mde_relative = 0.05
+# Primary metric: average weekly gross sales revenue per assigned SKU over the
+# full test window. Zero-sales weeks are included; the SKU is the independent unit.
+weeks_available = 8
+
+[powerbi]
+export_dir = "data/exports/powerbi"
+model_dir = "powerbi/model"
+dax_path = "powerbi/dax/measures.dax"
+dashboard_spec = "docs/dashboard_spec.md"
+data_dictionary = "docs/data_dictionary.md"
+
+[app]
+title = "Commercial & Pricing Intelligence"
+# The app reads only validated exports; it never recomputes business logic.
+exports_root = "data/exports"
